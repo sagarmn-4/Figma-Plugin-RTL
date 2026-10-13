@@ -1,0 +1,23 @@
+{
+  "name": "RTL - V2.0",
+  "id": "a14e05fc-3359-442e-9517-a207dd14633d",
+  "api": "1.0.0",
+  "main": "code.js",
+  "documentAccess": "dynamic-page",
+  "editorType": [
+    "figma"
+  ],
+
+  "networkAccess": {
+    "allowedDomains": [
+      "https://translate.googleapis.com"
+    ]
+  },
+  "relaunchButtons": [
+    {
+      "command": "a14e05fc-3359-442e-9517-a207dd14633d",
+      "name": "Create translated RTL/LTR preview"
+    }
+  ],
+  "ui": "ui.html"
+}

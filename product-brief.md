@@ -1,0 +1,18 @@
+# RTL - V2.0
+
+Plugin identity:
+- displayName: RTL - V2.0
+- description: Creates translated RTL/LTR previews while preserving ISO currency codes and protected visuals
+- versionLabel: Release 1.0 - Multiple language supported
+- snapshot: Twenty language targets across Latin, RTL, Cyrillic, Indic, CJK, and Thai, with automatic Noto mappings, currency-code preservation, protected visuals, hidden-layer opt-in, and a three-dot processing loader
+
+Original user prompt:
+Edit RTL
+Non-destructive preview — Duplicates the selection; original design and Design System remain untouched.
+
+Usage:
+Supported targets (20): Latin—English, French, German, Spanish; RTL—Arabic, Hebrew, Persian, Urdu; Cyrillic—Russian, Ukrainian, Bulgarian; Indic—Hindi, Bengali, Tamil, Telugu; CJK—Simplified Chinese, Traditional Chinese, Japanese, Korean; plus Thai. A central profile for each target defines its translation code, default direction, and Noto fallback family. Hebrew uses Noto Sans Hebrew; Persian uses Noto Sans Arabic; Cyrillic uses Noto Sans; Indic uses Noto Sans Devanagari/Bengali/Tamil/Telugu; CJK uses locale-specific Noto Sans SC/TC/JP/KR or corresponding Noto Sans CJK families. The existing approved weight mappings and Regular fallback reporting apply to all families. Font coverage checks remain family-name heuristics, not actual glyph verification. Only enumerated languages are selectable; “etc.” is not an automatic arbitrary-language feature.
+Include hidden layers is an unchecked checkbox on each plugin launch. By default, hidden layers and subtrees with hidden ancestors are excluded from text collection, font replacement, direction detection, and layout traversal. Enabling the checkbox includes them without making them visible. Hidden copies remain present in duplicated containers but their content is not processed while excluded. Grid reversal that would alter excluded hidden children is skipped and reported.
+The conversion table shows only failures and font-mapping exceptions, not successful changes. Missing mapped fonts/weights that required Regular are retained as exceptions. When there are no exceptions, show “No conversion issues reported.”
+Automatic replacement (no font picker): Roboto Regular/Medium/Bold → matching Noto weights; PP Right Grotesk Wide Medium → Noto ExtraBold; Wide Black → Noto Black. Use Noto Sans Arabic for Arabic and Urdu, Noto Sans Devanagari for Hindi, Noto Sans Thai for Thai, Noto Sans SC or Noto Sans CJK SC for Simplified Chinese, and Noto Sans for German. Missing mapped weights use the script-specific Regular with a summary note. Unmapped unsupported families also use script-specific Regular with a note. If that Regular is unavailable, leave text unchanged and report the missing font. Fonts must be available in Figma; the supplied https://fonts.google.com/?query=Noto is a reference, not a font installation API. The target-language selector remains. Styled ranges inherit existing typography; range boundaries are proportionally mapped to translated text. ISO currency labels remain unchanged, including their fonts.
+Select text layers or a container with text, choose Arabic, Hindi, Urdu, Simplified Chinese, Thai, or German, then select Auto, RTL, or LTR and create a translated preview. Standalone uppercase ISO 4217 currency codes—including CAD, INR, USD, EUR, GBP, JPY, and the full active/reserved code set—are detected before translation and returned unchanged, preventing ambiguous acronym mistranslation or transliteration. Other text follows the existing language translation flow. Protected visuals and the locked three-dot progress indicator remain unchanged. Originals remain untouched.

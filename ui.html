@@ -1,0 +1,271 @@
+<!doctype html>
+<html>
+<head>
+  <script>
+    try { window.localStorage.getItem('x') } catch (e) {
+      const store = new Map()
+      Object.defineProperty(window, 'localStorage', { value: {
+        getItem: (k) => store.has(k) ? store.get(k) : null,
+        setItem: (k, v) => store.set(k, String(v)),
+        removeItem: (k) => store.delete(k),
+        clear: () => store.clear(),
+        key: (i) => Array.from(store.keys())[i] ?? null,
+        get length() { return store.size }
+      }, configurable: true })
+    }
+  </script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --panel: var(--figma-color-bg, #2c2c2c);
+      --control: var(--figma-color-bg-secondary, #2c2c2c);
+      --border: var(--figma-color-border, #484848);
+      --text: var(--figma-color-text, #f5f5f5);
+      --secondary: var(--figma-color-text-secondary, #b8b8b8);
+      --accent: var(--figma-color-bg-brand, #0c8ce9);
+      --danger: var(--figma-color-text-danger, #ff6b6b);
+      font: 13px/1.4 Inter, "Helvetica Neue", Arial, sans-serif;
+      color: var(--text);
+      background: var(--panel);
+    }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; min-width: 320px; margin: 0; padding: 0; background: var(--panel); color: var(--text); }
+    body { overflow-x: hidden; }
+    button, input, select { font: inherit; }
+    #plugin-root { display: flex; flex-direction: column; width: 100%; min-height: 260px; }
+    .plugin-content { padding: 16px 16px 12px; }
+    .section-title { margin: 0 0 16px; font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: .01em; }
+    .field-list { display: grid; gap: 8px; }
+    .field-row { display: grid; grid-template-columns: minmax(108px, 1fr) minmax(0, 1.9fr); align-items: center; gap: 12px; min-width: 0; }
+    .field-row label { color: var(--secondary); font-size: 12px; }
+    .select-wrap { position: relative; min-width: 0; }
+    .select-wrap::after { position: absolute; top: 15px; right: 14px; width: 7px; height: 7px; border-right: 2px solid var(--text); border-bottom: 2px solid var(--text); content: ""; pointer-events: none; transform: rotate(45deg); }
+    select {
+      display: block; width: 100%; height: 40px; padding: 0 36px 0 12px;
+      appearance: none; color: var(--text); background: var(--control);
+      border: 1px solid var(--border); border-radius: 7px; outline: none;
+    }
+    select:hover { border-color: color-mix(in srgb, var(--border), var(--text) 25%); }
+    select:focus-visible, input:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    #message, #preview-note, #automatic-font-note, #font-status { color: var(--secondary); font-size: 11px; line-height: 16px; }
+    #message { min-height: 16px; margin-top: 8px; }
+    .checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: var(--secondary); font-size: 11px; line-height: 18px; cursor: pointer; }
+    .checkbox-row input { width: 16px; height: 16px; flex: 0 0 16px; margin: 0; accent-color: var(--accent); }
+    #preview-note { margin-top: 12px; }
+    #automatic-font-note { margin-top: 8px; }
+    #error { display: none; margin-top: 8px; color: var(--danger); font-size: 11px; line-height: 16px; }
+    #font-status { display: none; margin-top: 8px; }
+    #summary { display: none; margin-top: 12px; }
+    #summary-title { margin-bottom: 6px; font-size: 11px; line-height: 16px; font-weight: 600; }
+    .summary-scroll { max-height: 180px; overflow: auto; }
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 10px; line-height: 14px; }
+    th, td { padding: 6px; border: 1px solid var(--border); text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+    th { color: var(--secondary); font-weight: 600; }
+    th:nth-child(1), td:nth-child(1) { width: 24%; }
+    th:nth-child(2), td:nth-child(2) { width: 13%; text-align: center; }
+    .plugin-footer { position: sticky; bottom: 0; display: flex; justify-content: flex-end; padding: 12px; border-top: 1px solid var(--border); background: var(--panel); }
+    #translate { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; max-width: 100%; padding: 0 14px; border: 0; border-radius: 7px; color: #fff; background: var(--accent); font-weight: 500; cursor: pointer; }
+    #translate:hover:not(:disabled) { filter: brightness(1.08); }
+    #translate:disabled { color: var(--secondary); background: var(--figma-color-bg-disabled, #444); cursor: default; }
+    #translate[data-busy="true"]::before { width: 13px; height: 13px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; content: ""; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 360px) {
+      .plugin-content { padding-right: 12px; padding-left: 12px; }
+      .field-row { grid-template-columns: minmax(90px, .8fr) minmax(0, 1.2fr); gap: 8px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <div id="plugin-root">
+    <main class="plugin-content">
+      <h1 class="section-title">Translation</h1>
+      <div class="field-list">
+        <div class="field-row">
+          <label for="language">Translate to</label>
+          <div class="select-wrap">
+            <select id="language" value="Arabic" aria-label="Translate to">
+              <optgroup label="LTR · Latin">
+                <option value="English">English</option><option value="French">French</option>
+                <option value="German">German</option><option value="Spanish">Spanish</option>
+              </optgroup>
+              <optgroup label="RTL">
+                <option value="Arabic" selected>Arabic</option><option value="Hebrew">Hebrew</option>
+                <option value="Persian">Persian</option><option value="Urdu">Urdu</option>
+              </optgroup>
+              <optgroup label="LTR · Cyrillic">
+                <option value="Russian">Russian</option><option value="Ukrainian">Ukrainian</option><option value="Bulgarian">Bulgarian</option>
+              </optgroup>
+              <optgroup label="LTR · Indic">
+                <option value="Hindi">Hindi</option><option value="Bengali">Bengali</option>
+                <option value="Tamil">Tamil</option><option value="Telugu">Telugu</option>
+              </optgroup>
+              <optgroup label="LTR · CJK">
+                <option value="Chinese Simplified">Chinese Simplified</option><option value="Chinese Traditional">Chinese Traditional</option>
+                <option value="Japanese">Japanese</option><option value="Korean">Korean</option>
+              </optgroup>
+              <optgroup label="LTR · Other"><option value="Thai">Thai</option></optgroup>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <label for="direction">Layout direction</label>
+          <div class="select-wrap">
+            <select id="direction" value="Auto" aria-label="Layout direction">
+              <option value="Auto" selected>Auto from language</option>
+              <option value="RTL">Right to left</option>
+              <option value="LTR">Left to right</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div id="message" aria-live="polite">Select text layers or a container with text.</div>
+      <label class="checkbox-row" for="include-hidden">
+        <input id="include-hidden" type="checkbox"><span>Include hidden layers</span>
+      </label>
+      <div id="preview-note">Creates an editable duplicate and adapts nested Auto Layout, frames, groups, components, and instances. Originals stay untouched.</div>
+      <div id="automatic-font-note">Unsupported fonts are replaced automatically using language-specific Noto families and configured weights.</div>
+      <div id="error" role="alert"></div>
+      <div id="font-status" aria-live="polite"></div>
+      <section id="summary" aria-live="polite">
+        <div id="summary-title">Conversion issues &amp; exceptions</div>
+        <div class="summary-scroll">
+          <table>
+            <thead><tr><th>Area / text</th><th>Issues</th><th>What didn’t work</th></tr></thead>
+            <tbody id="summary-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <footer class="plugin-footer">
+      <button id="translate" type="button" disabled>Create translated preview</button>
+    </footer>
+  </div>
+  <script>
+    const button = document.getElementById('translate')
+    const language = document.getElementById('language')
+    const direction = document.getElementById('direction')
+    const includeHidden = document.getElementById('include-hidden')
+    const message = document.getElementById('message')
+    const error = document.getElementById('error')
+    const fontStatus = document.getElementById('font-status')
+    const summary = document.getElementById('summary')
+    const summaryBody = document.getElementById('summary-body')
+    language.value = language.getAttribute('value') || language.value
+    direction.value = direction.getAttribute('value') || direction.value
+    const ISO_CURRENCY_CODES = new Set('AED AFN ALL AMD ANG AOA ARS AUD AWG AZN BAM BBD BDT BGN BHD BIF BMD BND BOB BOV BRL BSD BTN BWP BYN BZD CAD CDF CHE CHF CHW CLF CLP CNY COP COU CRC CUC CUP CVE CZK DJF DKK DOP DZD EGP ERN ETB EUR FJD FKP GBP GEL GHS GIP GMD GNF GTQ GYD HKD HNL HTG HUF IDR ILS INR IQD IRR ISK JMD JOD JPY KES KGS KHR KMF KPW KRW KWD KYD KZT LAK LBP LKR LRD LSL LYD MAD MDL MGA MKD MMK MNT MOP MRU MUR MVR MWK MXN MXV MYR MZN NAD NGN NIO NOK NPR NZD OMR PAB PEN PGK PHP PKR PLN PYG QAR RON RSD RUB RWF SAR SBD SCR SDG SEK SGD SHP SLE SLL SOS SRD SSP STN SVC SYP SZL THB TJS TMT TND TOP TRY TTD TWD TZS UAH UGX USD USN UYI UYU UYW UZS VED VES VND VUV WST XAF XAG XAU XBA XBB XBC XBD XCD XCG XDR XOF XPD XPF XPT XSU XTS XUA XXX YER ZAR ZMW ZWL'.split(' '))
+
+    function isStandaloneCurrencyCode(text) {
+      const value = String(text).trim()
+      return /^[A-Z]{3}$/.test(value) && ISO_CURRENCY_CODES.has(value)
+    }
+
+    function post(payload) {
+      parent.postMessage({ pluginMessage: payload }, '*')
+    }
+
+    function setBusy(busy) {
+      includeHidden.disabled = busy
+      button.dataset.busy = String(busy)
+      if (busy) button.setAttribute('disabled', '')
+      else button.removeAttribute('disabled')
+      button.textContent = busy ? 'Creating preview…' : 'Create translated preview'
+    }
+
+    function chunks(text, maxLength) {
+      const output = []
+      let remaining = text
+      while (remaining.length > maxLength) {
+        let cut = remaining.lastIndexOf(' ', maxLength)
+        if (cut < maxLength * 0.6) cut = maxLength
+        output.push(remaining.slice(0, cut))
+        remaining = remaining.slice(cut)
+      }
+      if (remaining) output.push(remaining)
+      return output
+    }
+
+    async function translateText(text, target) {
+      const translated = []
+      for (const part of chunks(text, 4000)) {
+        const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=' +
+          encodeURIComponent(target) + '&dt=t&q=' + encodeURIComponent(part)
+        const response = await fetch(url)
+        if (!response.ok) throw new Error('Translation service returned ' + response.status)
+        const data = await response.json()
+        const value = Array.isArray(data[0]) ? data[0].map((segment) => segment[0] || '').join('') : ''
+        if (!value) throw new Error('No translation returned')
+        translated.push(value)
+      }
+      return translated.join('')
+    }
+
+    button.addEventListener('click', () => {
+      error.style.display = 'none'
+      fontStatus.style.display = 'none'
+      summary.style.display = 'none'
+      summaryBody.replaceChildren()
+      setBusy(true)
+      post({ type: 'translate', language: String(language.value), direction: String(direction.value), includeHidden: includeHidden.checked })
+    })
+
+    includeHidden.addEventListener('change', () => post({ type: 'include-hidden', includeHidden: includeHidden.checked }))
+
+    window.onmessage = async (event) => {
+      const msg = event.data && event.data.pluginMessage
+      if (!msg) return
+      if (msg.type === 'selection-state') {
+        const count = Number(msg.count) || 0
+        message.textContent = count > 0 ? count + ' text layer' + (count === 1 ? '' : 's') + ' selected' : 'Select text layers or a container with text.'
+        if (count > 0) button.removeAttribute('disabled')
+        else button.setAttribute('disabled', '')
+        return
+      }
+      if (msg.type === 'translate-items') {
+        const target = msg.targetLanguageCode
+        const results = []
+        for (const item of msg.items) {
+          if (isStandaloneCurrencyCode(item.text)) {
+            results.push({ id: item.id, text: item.text, preserved: true })
+            continue
+          }
+          try {
+            results.push({ id: item.id, text: await translateText(item.text, target) })
+          } catch (cause) {
+            results.push({ id: item.id, text: '', error: cause instanceof Error ? cause.message : String(cause) })
+          }
+        }
+        post({ type: 'translation-results', language: msg.language, direction: msg.direction, results })
+        return
+      }
+      if (msg.type === 'complete') {
+        setBusy(false)
+        if (Array.isArray(msg.summary) && msg.summary.length > 0) {
+          for (const row of msg.summary) {
+            const tr = document.createElement('tr')
+            for (const value of [row.area, row.failed || row.changed, row.note]) {
+              const td = document.createElement('td')
+              td.textContent = String(value)
+              tr.appendChild(td)
+            }
+            summaryBody.appendChild(tr)
+          }
+          summary.style.display = 'block'
+        }
+        if (msg.updated === 0) {
+          error.textContent = 'Translation failed. Check your connection and try again.'
+          error.style.display = 'block'
+        } else if (!Array.isArray(msg.summary) || msg.summary.length === 0) {
+          fontStatus.textContent = 'No conversion issues reported.'
+          fontStatus.style.display = 'block'
+        }
+      }
+    }
+
+    const root = document.getElementById('plugin-root')
+    if (root && typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(() => post({ type: 'resize', height: Math.ceil(root.getBoundingClientRect().height) })).observe(root)
+    }
+  </script>
+</body>
+</html>
