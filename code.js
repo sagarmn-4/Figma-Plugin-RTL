@@ -584,7 +584,7 @@
     button, input, select { font: inherit; }
     #plugin-root { display: flex; flex-direction: column; width: 100%; min-height: 260px; }
     .plugin-content { padding: 16px 16px 12px; }
-    .section-title { margin: 0 0 16px; font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: .01em; }
+    .section-title { margin: 0 0 4px; font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: .01em; }
     .field-list { display: grid; gap: 8px; }
     .field-row { display: grid; grid-template-columns: minmax(108px, 1fr) minmax(0, 1.9fr); align-items: center; gap: 12px; min-width: 0; }
     .field-row label { color: var(--secondary); font-size: 12px; }
@@ -598,11 +598,11 @@
     select:hover { border-color: color-mix(in srgb, var(--border), var(--text) 25%); }
     select:focus-visible, input:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     #message, #preview-note, #automatic-font-note, #font-status { color: var(--secondary); font-size: 11px; line-height: 16px; }
-    #message { min-height: 16px; margin-top: 8px; }
+    #message { min-height: 16px; margin: 0 0 8px; }
     .checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: var(--secondary); font-size: 11px; line-height: 18px; cursor: pointer; }
     .checkbox-row input { width: 16px; height: 16px; flex: 0 0 16px; margin: 0; accent-color: var(--accent); }
-    #preview-note { margin-top: 12px; }
-    #automatic-font-note { margin-top: 8px; }
+    #preview-note { margin: 0 0 4px; }
+    #automatic-font-note { margin: 0 0 16px; }
     #error { display: none; margin-top: 8px; color: var(--danger); font-size: 11px; line-height: 16px; }
     #font-status { display: none; margin-top: 8px; }
     #summary { display: none; margin-top: 12px; }
@@ -613,8 +613,8 @@
     th { color: var(--secondary); font-weight: 600; }
     th:nth-child(1), td:nth-child(1) { width: 24%; }
     th:nth-child(2), td:nth-child(2) { width: 13%; text-align: center; }
-    .plugin-footer { position: sticky; bottom: 0; display: flex; justify-content: flex-end; padding: 12px; border-top: 1px solid var(--border); background: var(--panel); }
-    #translate { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; max-width: 100%; padding: 0 14px; border: 0; border-radius: 7px; color: #fff; background: var(--accent); font-weight: 500; cursor: pointer; }
+    .plugin-footer { position: sticky; bottom: 0; display: flex; flex-direction: column; padding: 12px; border-top: 1px solid var(--border); background: var(--panel); }
+    #translate { display: inline-flex; align-self: flex-end; align-items: center; justify-content: center; gap: 8px; min-height: 40px; max-width: 100%; padding: 0 14px; border: 0; border-radius: 7px; color: #fff; background: var(--accent); font-weight: 500; cursor: pointer; }
     #translate:hover:not(:disabled) { filter: brightness(1.08); }
     #translate:disabled { color: var(--secondary); background: var(--figma-color-bg-disabled, #444); cursor: default; }
     #translate[data-busy="true"]::before { width: 13px; height: 13px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; content: ""; animation: spin .8s linear infinite; }
@@ -629,7 +629,9 @@
 <body>
   <div id="plugin-root">
     <main class="plugin-content">
-      <h1 class="section-title">Translation</h1>
+      <h1 class="section-title">RTL &amp; Localization</h1>
+      <div id="preview-note">Localize Figma designs across languages, switch layout direction, and handle RTL adaptations</div>
+      <div id="automatic-font-note">Unsupported fonts are replaced automatically using language-specific Noto families and configured weights.</div>
       <div class="field-list">
         <div class="field-row">
           <label for="language">Translate to</label>
@@ -669,12 +671,9 @@
           </div>
         </div>
       </div>
-      <div id="message" aria-live="polite">Select text layers or a container with text.</div>
       <label class="checkbox-row" for="include-hidden">
         <input id="include-hidden" type="checkbox"><span>Include hidden layers</span>
       </label>
-      <div id="preview-note">Creates an editable duplicate and adapts nested Auto Layout, frames, groups, components, and instances. Originals stay untouched.</div>
-      <div id="automatic-font-note">Unsupported fonts are replaced automatically using language-specific Noto families and configured weights.</div>
       <div id="error" role="alert"></div>
       <div id="font-status" aria-live="polite"></div>
       <section id="summary" aria-live="polite">
@@ -688,6 +687,7 @@
       </section>
     </main>
     <footer class="plugin-footer">
+      <div id="message" aria-live="polite">Select text layers or a container with text.</div>
       <button id="translate" type="button" disabled>Create translated preview</button>
     </footer>
   </div>
